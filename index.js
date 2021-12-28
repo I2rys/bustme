@@ -8,7 +8,6 @@ const Self_Args = process.argv.slice(2)
 
 var Self = {
     max: 0,
-    gh: false,
     valid: []
 }
 
@@ -29,7 +28,6 @@ async function check(dictionary, i){
         if(response.status === 200 || response.status === 201 || response.status === 202 || response.status === 203 || response.status === 204){
             console.log(`${Self_Args[0]}/${dictionary[i]} - Got status 200/201/202/203/204`)
             Self.valid.push(`${Self_Args[0]}/${dictionary[i]}`)
-            Self.gh = true
         }
 
         Self.max++
@@ -38,13 +36,13 @@ async function check(dictionary, i){
     }
 
     if(Self.max === dictionary.length){
-        if(!Self.gh){
-            console.log("No valid path found.")
+        if(Self.valid.length){
+            console.log(`Saving the results to ${Self_args[2]}`)
+            Fs.writeFileSync(Self_args[2], Self.valid.join("\n"), "utf8")
+            console.log(`Results successfully saved to ${Self_args[2]}`)
+        }else{
+            console.log("No valid paths found.")
         }
-
-        console.log(`Saving the results to ${Self_Args[2]}`)
-        Fs.writeFileSync(Self_Args[2], Self.valid.join("\n"), "utf8")
-        console.log(`Results successfully saved to ${Self_Args[2]}`)
 
         console.log("Finished checking.")
         process.exit()
