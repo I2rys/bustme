@@ -1,78 +1,58 @@
-//Dependencies
-const Axios = require("Axios")
-const Delay = require("delay")
+"use strict";
+
+// Dependencies
+const axios = require("Axios")
+const delay = require("delay")
 const Fs = require("fs")
 
 //Variables
-const Self_Args = process.argv.slice(2)
+const args = process.argv.slice(2)
 
-var Self = {
+var BustMe = {
     max: 0,
     valid: []
 }
 
 //Functions
-async function check(dictionary, i){
-    await Delay(1000)
+async function check(path){
+    await delay(1000)
 
-    if(!dictionary[i]){
-        return Self.max++
-    }
+    if(!path) return BustMe.max++
 
     try{
-        const response = await Axios({
+        const response = await axios({
             method: "GET",
-            url: `${Self_Args[0]}/${dictionary[i]}`
+            url: `${args[0]}/${path}`
         })
         
         if(response.status === 200 || response.status === 201 || response.status === 202 || response.status === 203 || response.status === 204){
-            console.log(`${Self_Args[0]}/${dictionary[i]} - Got status 200/201/202/203/204`)
-            Self.valid.push(`${Self_Args[0]}/${dictionary[i]}`)
+            console.log(`${args[0]}/${path}`)
+            BustMe.valid.push(`${args[0]}/${path}`)
         }
 
-        Self.max++
+        BustMe.max++
     }catch{
-        Self.max++
+        BustMe.max++
     }
 
-    if(Self.max === dictionary.length){
-        if(Self.valid.length){
-            console.log(`Saving the results to ${Self_args[2]}`)
-            Fs.writeFileSync(Self_args[2], Self.valid.join("\n"), "utf8")
-            console.log(`Results successfully saved to ${Self_args[2]}`)
+    if(BustMe.max === dictionary.length){
+        if(BustMe.valid.length){
+            console.log(`Saving the results to ${args[2]}`)
+            Fs.writeFileSync(args[2], BustMe.valid.join("\n"), "utf8")
+            console.log(`Results successfully saved to ${args[2]}`)
         }else{
             console.log("No valid paths found.")
         }
-
-        console.log("Finished checking.")
-        process.exit()
     }
 }
 
 //Main
-if(!Self_Args.length){
-    console.log("node index.js <url> <dictionary> <output>")
-    process.exit()
-}
+if(!args.length) return console.log("node index.js <url> <dictionary> <output>")
+if(!Fs.existsSync(args[1])) return console.log("Invalid dictionary")
+if(!args[2]) return console.log("Invalid output.")
 
-if(!Fs.existsSync(Self_Args[1])){
-    console.log("Invalid dictionary")
-    process.exit()
-}
+const dictionary = Fs.readFileSync(args[1], "utf8").replace(/\r/g, "").split("\n")
 
-if(!Self_Args[2]){
-    console.log("Invalid output.")
-    process.exit()
-}
-
-const dictionary_data = Fs.readFileSync(Self_Args[1], "utf8").replace(/\r/g, "").split("\n")
-
-if(!dictionary_data.length){
-    console.log("Dictionary data is empty.")
-    process.exit()
-}
-
+if(!dictionary.length) return console.log("Dictionary data is empty.")
 console.log("Scanning the website, please wait.")
-for( i = 0; i <= dictionary_data.length-1; i++ ){
-    check(dictionary_data, i)
-}
+for( const path of dictionary ) check(path)
